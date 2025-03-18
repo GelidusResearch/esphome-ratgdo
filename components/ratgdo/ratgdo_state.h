@@ -104,6 +104,18 @@ namespace ratgdo {
         (STOP, 3),
         (UNKNOWN, 4))
 
+    ENUM(VehicleDetectedState, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
+    ENUM(VehicleArrivingState, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
+    ENUM(VehicleLeavingState, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
     struct Openings {
         uint16_t count;
         uint8_t flag;

@@ -1,0 +1,330 @@
+external_components:
+   - source: github://ratgdo/gelidusresearch/components/ratgdo
+     components: [ ratgdo ]
+     refresh: 0s
+
+esphome:
+  name: gdo1
+  friendly_name: GDO1
+  comment: "ESP32: Garage Door Opener"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  baud_rate: 0 #115200 # Disable logging when running a ToF or DHT sensor on a v1 board otherwise set to 115200
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "Your 32-byte encryption key here"
+
+ota:
+  - platform: esphome
+
+wifi:
+  power_save_mode: none
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: "GDO1"
+    password: ""
+    ap_timeout: 15s
+
+# improv_serial:    # Not available with Optional Add-ons and a v1 board otherwise baudrate must be 115200 to enable it
+
+captive_portal:
+
+web_server:
+
+preferences:
+  flash_write_interval: 600s    # RATGDO firmware requires a longer flash write interval due to the lack of wear leveling
+
+substitutions:
+  id_prefix: gdo1
+  friendly_name: "GDO1"
+  uart_tx_pin: GPIO22           # J4 Pin 1 Red or 3 Blue to Opener Red CTRL terminal
+  uart_rx_pin: GPIO21           # J4 Pin 1 Red or 3 Blue to Opener Red CTRL terminal
+  tof_sda_pin: GPIO3            # GPIO26 = v2 board GPIO3 = v1 board
+  tof_scl_pin: GPIO1            # GPIO25 = v2 board GPIO1 = v1 board
+  input_obst_pin: GPIO23        # J4 Pin 4 Grey OBST
+  dry_contact_open_pin: GPIO17  # J4 Pin 6 Green
+  dry_contact_close_pin: GPIO19 # J4 Pin 7 Blue
+  dry_contact_light_pin: GPIO18 # J4 Pin 8 Orange
+
+ratgdo:
+  id: ${id_prefix}
+  input_gdo_pin: ${uart_rx_pin}
+  output_gdo_pin: ${uart_tx_pin}
+  input_obst_pin: ${input_obst_pin}
+  dry_contact_open_sensor: ${id_prefix}_dry_contact_open
+  dry_contact_close_sensor: ${id_prefix}_dry_contact_close
+  tof_sda_pin: ${tof_sda_pin}
+  tof_scl_pin: ${tof_scl_pin}
+  protocol: drycontact
+
+sensor:
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+  - platform: ratgdo
+    id: ${id_prefix}_openings
+    type: openings
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Openings"
+    unit_of_measurement: "openings"
+    icon: mdi:open-in-app
+  - platform: ratgdo
+    id: ${id_prefix}_vehicle_distance_actual
+    type: distance
+    name: "Vehicle Distance Measured"
+    ratgdo_id: ${id_prefix}
+    unit_of_measurement: "mm"
+    internal: true
+    filters:
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 1
+      - throttle: 500ms
+      - heartbeat: 5s
+  - platform: copy
+    source_id: ${id_prefix}_vehicle_distance_actual
+    name: Vehicle Distance Measure Filtered
+    filters:
+      - min:
+          window_size: 10
+          send_every: 1
+  # - platform: dht              #Optional Add-on DHT22
+  #   model: DHT22
+  #   pin: GPIO3
+  #   temperature:
+  #     name: "Temperature"
+  #     accuracy_decimals: 1
+  #   humidity:
+  #     name: "Humidity"
+  #     accuracy_decimals: 1
+  #   update_interval: 60s
+
+binary_sensor:
+  - platform: ratgdo
+    type: motion
+    id: ${id_prefix}_motion
+    ratgdo_id: ${id_prefix}
+    name: "Motion"
+    device_class: motion
+
+  - platform: ratgdo
+    type: obstruction
+    id: ${id_prefix}_obstruction
+    ratgdo_id: ${id_prefix}
+    name: "Obstruction"
+    device_class: problem
+
+  - platform: ratgdo
+    type: button
+    id: ${id_prefix}_button
+    ratgdo_id: ${id_prefix}
+    name: "Button"
+    entity_category: diagnostic
+
+  - platform: ratgdo
+    type: motor
+    id: ${id_prefix}_motor
+    ratgdo_id: ${id_prefix}
+    name: "Motor"
+    device_class: running
+    entity_category: diagnostic
+
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_vehicle_detected
+    type: vehicle_detected
+    name: "Vehicle State Detected"
+
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_vehicle_arriving
+    type: vehicle_arriving
+    name: "Vehicle State Arriving"
+
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_vehicle_leaving
+    type: vehicle_leaving
+    name: "Vehicle State Leaving"
+
+  - platform: gpio
+    id: "${id_prefix}_dry_contact_open"
+    pin:
+      number: ${dry_contact_open_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "Open limit switch"
+    entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
+  - platform: gpio
+    id: "${id_prefix}_dry_contact_close"
+    pin:
+      number: ${dry_contact_close_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "Close limit switch"
+    entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
+
+  # - platform: gpio
+  #   id: "${id_prefix}_dry_contact_open"
+  #   pin:
+  #     number: ${dry_contact_open_pin}  #  dry contact for opening door
+  #     inverted: true
+  #     mode:
+  #       input: true
+  #       pullup: true
+  #   name: "Dry contact open"
+  #   entity_category: diagnostic
+  #   on_press:
+  #     - if:
+  #         condition:
+  #           binary_sensor.is_off: ${id_prefix}_dry_contact_close
+  #         then:
+  #           - cover.open: ${id_prefix}_garage_door
+  # - platform: gpio
+  #   id: "${id_prefix}_dry_contact_close"
+  #   pin:
+  #     number: ${dry_contact_close_pin}  # dry contact for closing door
+  #     inverted: true
+  #     mode:
+  #       input: true
+  #       pullup: true
+  #   name: "Dry contact close"
+  #   entity_category: diagnostic
+  #   on_press:
+  #     - if:
+  #         condition:
+  #           binary_sensor.is_off: ${id_prefix}_dry_contact_open
+  #         then:
+  #           - cover.close: ${id_prefix}_garage_door
+  - platform: gpio
+    id: "${id_prefix}_dry_contact_light"
+    pin:
+      number: ${dry_contact_light_pin}  # dry contact for triggering light
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "Dry contact light"
+    entity_category: diagnostic
+    on_press:
+      - light.toggle: ${id_prefix}_light
+
+number:
+  - platform: ratgdo
+    id: ${id_prefix}_rolling_code_counter
+    type: rolling_code_counter
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Rolling code counter"
+    mode: box
+    unit_of_measurement: "codes"
+
+  - platform: ratgdo
+    id: ${id_prefix}_opening_duration
+    type: opening_duration
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Opening duration"
+    unit_of_measurement: "s"
+
+  - platform: ratgdo
+    id: ${id_prefix}_closing_duration
+    type: closing_duration
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Closing duration"
+    unit_of_measurement: "s"
+
+  - platform: ratgdo
+    id: ${id_prefix}_client_id
+    type: client_id
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Client ID"
+    mode: box
+
+  - platform: ratgdo
+    id: ${id_prefix}_target_distance_measurement
+    type: target_distance_measurement
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Vehicle Distance Target"
+    mode: box
+    unit_of_measurement: "mm"
+
+cover:
+  - platform: ratgdo
+    id: ${id_prefix}_garage_door
+    device_class: garage
+    name: "Door"
+    ratgdo_id: ${id_prefix}
+
+light:
+  - platform: ratgdo
+    id: ${id_prefix}_light
+    name: "Light"
+    ratgdo_id: ${id_prefix}
+
+button:
+  - platform: restart
+    name: "Restart"
+  - platform: safe_mode
+    name: "Safe mode boot"
+    entity_category: diagnostic
+
+  - platform: template
+    id: ${id_prefix}_query_status
+    entity_category: diagnostic
+    name: "Query status"
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).query_status();
+
+  - platform: template
+    id: ${id_prefix}_query_openings
+    name: "Query openings"
+    entity_category: diagnostic
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).query_openings();
+
+  - platform: template
+    id: ${id_prefix}_sync
+    name: "Sync"
+    entity_category: diagnostic
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).sync();
+
+  - platform: template
+    id: ${id_prefix}_toggle_door
+    name: "Toggle door"
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).door_toggle();
+
+status_led:
+  pin: GPIO4

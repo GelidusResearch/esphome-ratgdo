@@ -17,17 +17,19 @@ SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())
 
 CONF_OUTPUT_GDO = "output_gdo_pin"
 DEFAULT_OUTPUT_GDO = (
-    "D4"  # D4 red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
+    "GPIO22"  # D4 red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
 )
 CONF_INPUT_GDO = "input_gdo_pin"
 DEFAULT_INPUT_GDO = (
-    "D2"  # D2 red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
+    "GPIO21"  # D2 red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
 )
 CONF_INPUT_OBST = "input_obst_pin"
-DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
+DEFAULT_INPUT_OBST = "GPIO23"  # D7 black obstruction sensor terminal
 
 CONF_DISCRETE_OPEN_PIN = "discrete_open_pin"
 CONF_DISCRETE_CLOSE_PIN = "discrete_close_pin"
+CONF_TOF_SDA_PIN = "tof_sda_pin"
+CONF_TOF_SCL_PIN = "tof_scl_pin"
 
 CONF_RATGDO_ID = "ratgdo_id"
 
@@ -44,15 +46,6 @@ CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
 
-def validate_protocol(config):
-    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (CONF_DRY_CONTACT_CLOSE_SENSOR not in config or CONF_DRY_CONTACT_OPEN_SENSOR not in config):
-        raise cv.Invalid("dry_contact_close_sensor and dry_contact_open_sensor are required when using protocol drycontact")
-    if config.get(CONF_PROTOCOL, None) != PROTOCOL_DRYCONTACT and (CONF_DRY_CONTACT_CLOSE_SENSOR in config or CONF_DRY_CONTACT_OPEN_SENSOR in config):
-        raise cv.Invalid("dry_contact_close_sensor and dry_contact_open_sensor are only valid when using protocol drycontact")
-#    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and CONF_DRY_CONTACT_OPEN_SENSOR not in config:
-#        raise cv.Invalid("dry_contact_open_sensor is required when using protocol drycontact")
-    return config
-
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
     {
@@ -68,6 +61,8 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
         cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_TOF_SDA_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_TOF_SCL_PIN): pins.gpio_output_pin_schema,
         cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
@@ -82,7 +77,6 @@ CONFIG_SCHEMA = cv.All(
         cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(binary_sensor.BinarySensor),
     }
     ).extend(cv.COMPONENT_SCHEMA),
-    validate_protocol,
 )
 
 RATGDO_CLIENT_SCHMEA = cv.Schema(
@@ -145,3 +139,9 @@ async def to_code(config):
     if CONF_DISCRETE_CLOSE_PIN in config and config[CONF_DISCRETE_CLOSE_PIN]:
         pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_CLOSE_PIN])
         cg.add(var.set_discrete_close_pin(pin))
+    if CONF_TOF_SDA_PIN in config and config[CONF_TOF_SDA_PIN]:
+         pin = await cg.gpio_pin_expression(config[CONF_TOF_SDA_PIN])
+         cg.add(var.set_tof_sda_pin(pin))
+    if CONF_TOF_SCL_PIN in config and config[CONF_TOF_SCL_PIN]:
+         pin = await cg.gpio_pin_expression(config[CONF_TOF_SCL_PIN])
+         cg.add(var.set_tof_scl_pin(pin))
