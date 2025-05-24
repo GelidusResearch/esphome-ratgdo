@@ -137,8 +137,8 @@ namespace esphome
                     }
                     distance_sensor_.VL53L1X_ClearInterrupt();
                 }
-#endif
             }
+#endif
         }
     } // namespace ratgdo
 } // namespace esphome
