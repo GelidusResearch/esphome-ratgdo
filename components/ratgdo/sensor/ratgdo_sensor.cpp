@@ -14,7 +14,12 @@ namespace esphome
 #ifdef USE_DISTANCE
         RATGDOSensor::RATGDOSensor() : distance_sensor_(&Wire, 33)
         {
-            // Constructor implementation
+            // Constructor implementation with distance sensor
+        }
+#else
+        RATGDOSensor::RATGDOSensor()
+        {
+            // Constructor implementation without distance sensor
         }
 #endif
 
@@ -22,32 +27,32 @@ namespace esphome
         {
             if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_OPENINGS)
             {
-                this->parent_->subscribe_openings([=](uint16_t value)
+                this->parent_->subscribe_openings([this](uint16_t value)
                                                   { this->publish_state(value); });
             }
             else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL)
             {
-                this->parent_->subscribe_paired_devices_total([=](uint16_t value)
+                this->parent_->subscribe_paired_devices_total([this](uint16_t value)
                                                               { this->publish_state(value); });
             }
             else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_REMOTES)
             {
-                this->parent_->subscribe_paired_remotes([=](uint16_t value)
+                this->parent_->subscribe_paired_remotes([this](uint16_t value)
                                                         { this->publish_state(value); });
             }
             else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_KEYPADS)
             {
-                this->parent_->subscribe_paired_keypads([=](uint16_t value)
+                this->parent_->subscribe_paired_keypads([this](uint16_t value)
                                                         { this->publish_state(value); });
             }
             else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS)
             {
-                this->parent_->subscribe_paired_wall_controls([=](uint16_t value)
+                this->parent_->subscribe_paired_wall_controls([this](uint16_t value)
                                                               { this->publish_state(value); });
             }
             else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES)
             {
-                this->parent_->subscribe_paired_accessories([=](uint16_t value)
+                this->parent_->subscribe_paired_accessories([this](uint16_t value)
                                                             { this->publish_state(value); });
             }
             else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE)
@@ -80,7 +85,7 @@ namespace esphome
                     return;
                 }
 
-                this->parent_->subscribe_distance_measurement([=](int16_t value) { this->publish_state(value); });
+                this->parent_->subscribe_distance_measurement([this](int16_t value) { this->publish_state(value); });
 #endif
             }
         }
