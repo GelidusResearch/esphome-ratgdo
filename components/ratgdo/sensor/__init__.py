@@ -46,7 +46,7 @@ async def to_code(config):
         cg.add_library(name="Wire", version=None)
         cg.add_library(
             name="vl53l1x",
-            repository="https://github.com/stm32duino/VL53L1X",
+            repository="https://github.com/gelidusresearch/VL53L1X",
             version=None,
         )
         cg.add_define("USE_DISTANCE")
