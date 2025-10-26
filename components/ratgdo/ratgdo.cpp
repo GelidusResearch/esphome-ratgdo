@@ -311,6 +311,7 @@ namespace ratgdo {
     void RATGDOComponent::received(const TimeToClose ttc)
     {
         ESP_LOGD(TAG, "Time to close (TTC): %ds", ttc.seconds);
+        this->time_to_close_ = static_cast<float>(ttc.seconds);
     }
 
     void RATGDOComponent::received(const BatteryState battery_state)
@@ -495,6 +496,17 @@ namespace ratgdo {
     void RATGDOComponent::clear_paired_devices(PairedDevice kind)
     {
         this->protocol_->call(ClearPairedDevices { kind });
+    }
+
+    void RATGDOComponent::set_time_to_close(uint16_t seconds)
+    {
+        if (seconds == 0) {
+            // Send CANCEL_TTC command
+            this->protocol_->call(CancelTTC {});
+        } else {
+            // Send SET_TTC command
+            this->protocol_->call(SetTTC { seconds });
+        }
     }
 
     void RATGDOComponent::sync()
@@ -829,6 +841,11 @@ namespace ratgdo {
         dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value) {
             this->protocol_->set_close_limit(sensor_value);
         });
+    }
+
+    void RATGDOComponent::subscribe_time_to_close(std::function<void(float)>&& f)
+    {
+        this->time_to_close_.subscribe([this, f = std::move(f)](float state) { defer("time_to_close", [f, state] { f(state); }); });
     }
 
 } // namespace ratgdo

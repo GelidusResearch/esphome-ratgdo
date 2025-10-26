@@ -52,8 +52,9 @@ namespace ratgdo {
             (PAIR_2, 0x400),
             (PAIR_2_RESP, 0x401),
             (SET_TTC, 0x402), // ttc_in_seconds = (byte1<<8)+byte2
-            (CANCEL_TTC, 0x408), // ?
-            (TTC, 0x40a), // Time to close
+            (CANCEL_TTC, 0x408), // cancels time to close
+            (UPDATE_TTC, 0x40a), // Time to close countdown time update
+
             (GET_OPENINGS, 0x48b),
             (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
         )

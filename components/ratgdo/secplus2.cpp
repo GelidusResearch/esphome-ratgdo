@@ -169,6 +169,12 @@ namespace ratgdo {
                 this->activate_learn();
             } else if (args.tag == Tag::inactivate_learn) {
                 this->inactivate_learn();
+            } else if (args.tag == Tag::set_ttc) {
+                uint8_t byte1 = (args.value.set_ttc.seconds >> 8) & 0xFF;
+                uint8_t byte2 = args.value.set_ttc.seconds & 0xFF;
+                this->send_command(Command(CommandType::SET_TTC, 1, byte1, byte2));
+            } else if (args.tag == Tag::cancel_ttc) {
+                this->send_command(Command(CommandType::CANCEL_TTC, 1, 0x05, 0x00));
             }
             return {};
         }

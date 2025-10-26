@@ -15,6 +15,7 @@ namespace ratgdo {
         RATGDO_CLOSING_DURATION,
         RATGDO_CLOSING_DELAY,
         RATGDO_TARGET_DISTANCE_MEASUREMENT,
+        RATGDO_TIME_TO_CLOSE,
     };
 
     class RATGDONumber : public number::Number, public RATGDOClient, public Component {

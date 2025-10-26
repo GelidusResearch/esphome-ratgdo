@@ -34,6 +34,8 @@ namespace ratgdo {
             ESP_LOGCONFIG(TAG, "  Type: Closing Delay");
         } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
             ESP_LOGCONFIG(TAG, " Type: Target Distance Measurement");
+        } else if (this->number_type_ == RATGDO_TIME_TO_CLOSE) {
+            ESP_LOGCONFIG(TAG, "  Type: Time to Close");
         }
     }
 
@@ -56,7 +58,14 @@ namespace ratgdo {
                 }
             }
         }
-        this->control(value);
+
+        // Don't send TTC commands during setup - only when user actively changes the value
+        if (this->number_type_ != RATGDO_TIME_TO_CLOSE) {
+            this->control(value);
+        } else {
+            // For TTC, just update the state without sending a command
+            this->update_state(value);
+        }
 
         if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->parent_->subscribe_rolling_code_counter([this](uint32_t value) {
@@ -78,6 +87,10 @@ namespace ratgdo {
             // this->parent_->subscribe_target_distance_measurement([=](float value) {
             //     this->update_state(value);
             // });
+        } else if (this->number_type_ == RATGDO_TIME_TO_CLOSE) {
+            this->parent_->subscribe_time_to_close([this](float value) {
+                this->update_state(value);
+            });
         }
     }
 
@@ -102,6 +115,10 @@ namespace ratgdo {
             this->traits.set_step(1);
             this->traits.set_min_value(10);
             this->traits.set_max_value(4000);
+        } else if (this->number_type_ == RATGDO_TIME_TO_CLOSE) {
+            this->traits.set_step(60);
+            this->traits.set_min_value(0.0);
+            this->traits.set_max_value(2400.0);
         }
     }
 
@@ -129,6 +146,8 @@ namespace ratgdo {
             this->parent_->call_protocol(SetClientID { static_cast<uint32_t>(value) });
         } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
             this->parent_->set_target_distance_measurement(value);
+        } else if (this->number_type_ == RATGDO_TIME_TO_CLOSE) {
+            this->parent_->set_time_to_close(static_cast<uint16_t>(value));
         }
         this->update_state(value);
     }

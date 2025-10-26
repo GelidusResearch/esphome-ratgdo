@@ -74,7 +74,12 @@ namespace ratgdo {
         struct ClearPairedDevices {
             PairedDevice kind;
         };
+        struct SetTTC {
+            uint16_t seconds;
+        };
 
+        struct CancelTTC {
+        };
         // a poor man's sum-type, because C++
         SUM_TYPE(Args,
             (SetRollingCodeCounter, set_rolling_code_counter),
@@ -86,7 +91,9 @@ namespace ratgdo {
             (InactivateLearn, inactivate_learn),
             (QueryPairedDevices, query_paired_devices),
             (QueryPairedDevicesAll, query_paired_devices_all),
-            (ClearPairedDevices, clear_paired_devices), )
+            (ClearPairedDevices, clear_paired_devices),
+            (SetTTC, set_ttc),
+            (CancelTTC, cancel_ttc), )
 
         struct RollingCodeCounter {
             observable<uint32_t>* value;

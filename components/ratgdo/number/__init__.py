@@ -18,6 +18,7 @@ TYPES = {
     "closing_duration": NumberType.RATGDO_CLOSING_DURATION,
     "closing_delay": NumberType.RATGDO_CLOSING_DELAY,
     "target_distance_measurement": NumberType.RATGDO_TARGET_DISTANCE_MEASUREMENT,
+    "time_to_close": NumberType.RATGDO_TIME_TO_CLOSE,
 }
 
 

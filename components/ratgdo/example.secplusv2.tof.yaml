@@ -245,6 +245,14 @@ number:
     mode: box
     unit_of_measurement: "mm"
 
+  - platform: ratgdo
+    id: ${id_prefix}_time_to_close
+    type: time_to_close
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Time to close"
+    unit_of_measurement: "s"
+
 cover:
   - platform: ratgdo
     id: ${id_prefix}_garage_door
