@@ -1,7 +1,10 @@
 external_components:
-  - source: github://ratgdo/gelidusresearch/components/ratgdo
+  - source:
+      type: git
+      url: https://github.com/gelidusresearch/esphome-ratgdo.git
+      ref: 1.1.1
     components: [ ratgdo ]
-    refresh: 0s
+    refresh: 1d
 
 esphome:
   name: gdo1
@@ -15,7 +18,7 @@ esp32:
 
 # Enable logging
 logger:
-  baud_rate: 0 #115200 # Disable logging when running a ToF or DHT sensor on a v1 board otherwise set to 115200
+  baud_rate: 115200 # Disable logging when running a ToF or DHT sensor on a v1 board otherwise set to 115200
 
 # Enable Home Assistant API
 api:
