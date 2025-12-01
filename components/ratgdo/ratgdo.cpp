@@ -455,11 +455,9 @@ namespace ratgdo {
                 this->obstruction_sensor_detected_ = true;
             } else if (this->isr_store_.obstruction_low_count == 0) {
                 // if there have been no pulses the line is steady high or low
-#ifdef USE_ESP32
-                if (this->input_obst_pin_->digital_read()) {
-#else
+
                 if (!this->input_obst_pin_->digital_read()) {
-#endif
+
                     // asleep
                     last_asleep = current_millis;
                 } else {
