@@ -12,6 +12,8 @@ namespace ratgdo {
         LOG_SWITCH("", "RATGDO Switch", this);
         if (this->switch_type_ == SwitchType::RATGDO_LEARN) {
             ESP_LOGCONFIG(TAG, "  Type: Learn");
+        } else if (this->switch_type_ == SwitchType::RATGDO_CLOSE_NOTIFICATION) {
+            ESP_LOGCONFIG(TAG, "  Type: Close Notification");
         }
     }
 
@@ -26,6 +28,19 @@ namespace ratgdo {
             this->parent_->subscribe_vehicle_arriving_state([this](VehicleArrivingState state) {
                 this->write_state(state == VehicleArrivingState::YES);
             });
+        } else if (this->switch_type_ == SwitchType::RATGDO_CLOSE_NOTIFICATION) {
+            // Setup persistence
+            this->pref_ = global_preferences->make_preference<bool>(this->get_object_id_hash());
+
+            bool state = false;
+            if (this->pref_.load(&state)) {
+                // Restore saved state
+                this->parent_->set_close_notification_enabled(state);
+                this->publish_state(state);
+            } else {
+                // Default to disabled
+                this->publish_state(false);
+            }
         }
     }
 
@@ -39,6 +54,11 @@ namespace ratgdo {
             }
         } else if (this->switch_type_ == SwitchType::RATGDO_LED) {
             this->pin_->digital_write(state);
+            this->publish_state(state);
+        } else if (this->switch_type_ == SwitchType::RATGDO_CLOSE_NOTIFICATION) {
+            this->parent_->set_close_notification_enabled(state);
+            // Save to flash
+            this->pref_.save(&state);
             this->publish_state(state);
         }
     }

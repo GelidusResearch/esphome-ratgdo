@@ -501,10 +501,8 @@ namespace ratgdo {
     void RATGDOComponent::set_time_to_close(uint16_t seconds)
     {
         if (seconds == 0) {
-            // Send CANCEL_TTC command
             this->protocol_->call(CancelTTC {});
         } else {
-            // Send SET_TTC command
             this->protocol_->call(SetTTC { seconds });
         }
     }
@@ -557,6 +555,16 @@ namespace ratgdo {
                     ESP_LOGW(TAG, "Door did not stop, ignoring close command");
                 }
             });
+            return;
+        }
+
+        if (this->close_notification_enabled_ && *this->door_state == DoorState::OPEN) {
+                this->saved_ttc_value_ = *this->time_to_close_;
+                this->set_time_to_close(1);
+                // Restore original TTC after door close ttc alarm timer period ~9s
+                set_timeout("restore_ttc", 11000, [this]() {
+                    this->set_time_to_close(static_cast<uint16_t>(this->saved_ttc_value_));
+                });
             return;
         }
 
@@ -846,6 +854,12 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_time_to_close(std::function<void(float)>&& f)
     {
         this->time_to_close_.subscribe([this, f = std::move(f)](float state) { defer("time_to_close", [f, state] { f(state); }); });
+    }
+
+    void RATGDOComponent::set_close_notification_enabled(bool enabled)
+    {
+        this->close_notification_enabled_ = enabled;
+        ESP_LOGI(TAG, "Close notification %s", enabled ? "enabled" : "disabled");
     }
 
 } // namespace ratgdo
