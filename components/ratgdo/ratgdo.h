@@ -150,6 +150,10 @@ namespace ratgdo {
         void calculate_presence();
         void presence_change(bool sensor_value);
         void set_time_to_close(uint16_t seconds);
+        void set_close_notification_enabled(bool enabled);
+        bool get_close_notification_enabled() const { return this->close_notification_enabled_; }
+        void set_invert_obstructioned(bool inverted);
+        bool get_invert_obstructioned() const { return this->invert_obstructioned_; }
 
         // light
         void light_toggle();
@@ -206,6 +210,9 @@ namespace ratgdo {
         protocol::Protocol* protocol_;
         bool obstruction_sensor_detected_ { false };
         bool presence_detect_window_active_ { false };
+        bool close_notification_enabled_ { false };
+        bool invert_obstructioned_ { false };
+        float saved_ttc_value_ { 0 };
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;

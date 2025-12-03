@@ -4,13 +4,16 @@
 #include "../ratgdo_state.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/core/component.h"
+#include "esphome/core/preferences.h"
 
 namespace esphome {
 namespace ratgdo {
 
     enum SwitchType {
         RATGDO_LEARN,
-        RATGDO_LED
+        RATGDO_LED,
+        RATGDO_CLOSE_NOTIFICATION,
+        RATGDO_invert_obstruction
     };
 
     class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
@@ -21,10 +24,12 @@ namespace ratgdo {
 
         void write_state(bool state) override;
         void set_pin(GPIOPin* pin) { pin_ = pin; }
+        float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
     protected:
         SwitchType switch_type_;
         GPIOPin* pin_;
+        ESPPreferenceObject pref_;
     };
 
 } // namespace ratgdo
