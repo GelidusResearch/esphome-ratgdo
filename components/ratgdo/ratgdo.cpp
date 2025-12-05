@@ -534,9 +534,6 @@ namespace ratgdo {
 
         this->door_action(DoorAction::OPEN);
 
-        // Set state immediately for responsiveness
-        this->received(DoorState::OPENING);
-
         if (*this->opening_duration > 0) {
             // query state in case we don't get a status message
             set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [this]() {
@@ -546,9 +543,7 @@ namespace ratgdo {
                 }
             });
         }
-    }
-
-    void RATGDOComponent::door_close()
+    }    void RATGDOComponent::door_close()
     {
         if (*this->door_state == DoorState::CLOSING) {
             return; // gets ignored by opener
