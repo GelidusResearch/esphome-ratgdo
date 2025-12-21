@@ -65,7 +65,7 @@ namespace esphome
                 distance_sensor_.VL53L1X_Off();
                 delay(150); // Give the sensor time to boot up
                 rc = distance_sensor_.InitSensor(0x53);
-                ESP_LOG1(TAG, "ToF Sensor initialized with address: 0x%02X", distance_sensor_.getAddress());
+                ESP_LOG1(TAG, "ToF Sensor initialized with address: 0x53");
                 if (rc != VL53L1X_ERROR_NONE)
                 {
                     ESP_LOG1(TAG, "ToF Sensor failed to initialize error: %d", rc);
