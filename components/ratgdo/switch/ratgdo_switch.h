@@ -13,7 +13,7 @@ namespace ratgdo {
         RATGDO_LEARN,
         RATGDO_LED,
         RATGDO_CLOSE_NOTIFICATION,
-        RATGDO_OBSTRUCTION_INVERT,
+        RATGDO_INVERT_OBSTRUCTION,
         RATGDO_TOGGLE_ONLY
     };
 

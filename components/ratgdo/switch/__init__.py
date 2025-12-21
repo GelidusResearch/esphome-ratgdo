@@ -16,7 +16,7 @@ TYPES = {
     "learn": SwitchType.RATGDO_LEARN,
     "led": SwitchType.RATGDO_LED,
     "close_notification": SwitchType.RATGDO_CLOSE_NOTIFICATION,
-    "obstruction_invert": SwitchType.RATGDO_OBSTRUCTION_INVERT,
+    "invert_obstruction": SwitchType.RATGDO_INVERT_OBSTRUCTION,
     "toggle_only": SwitchType.RATGDO_TOGGLE_ONLY
 }
 

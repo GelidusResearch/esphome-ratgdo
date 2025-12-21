@@ -14,8 +14,8 @@ namespace ratgdo {
             ESP_LOGCONFIG(TAG, "  Type: Learn");
         } else if (this->switch_type_ == SwitchType::RATGDO_CLOSE_NOTIFICATION) {
             ESP_LOGCONFIG(TAG, "  Type: Close Notification");
-        } else if (this->switch_type_ == SwitchType::RATGDO_OBSTRUCTION_INVERT) {
-            ESP_LOGCONFIG(TAG, "  Type: Obstruction Invert");
+        } else if (this->switch_type_ == SwitchType::RATGDO_INVERT_OBSTRUCTION) {
+            ESP_LOGCONFIG(TAG, "  Type: Invert Obstruction");
         } else if (this->switch_type_ == SwitchType::RATGDO_TOGGLE_ONLY) {
             ESP_LOGCONFIG(TAG, "  Type: Toggle Only Mode");
         }
@@ -45,7 +45,7 @@ namespace ratgdo {
                 // Default to disabled
                 this->publish_state(false);
             }
-        } else if (this->switch_type_ == SwitchType::RATGDO_OBSTRUCTION_INVERT) {
+        } else if (this->switch_type_ == SwitchType::RATGDO_INVERT_OBSTRUCTION) {
             // Setup persistence
             this->pref_ = global_preferences->make_preference<bool>(this->get_object_id_hash());
 
@@ -90,7 +90,7 @@ namespace ratgdo {
             // Save to flash
             this->pref_.save(&state);
             this->publish_state(state);
-        } else if (this->switch_type_ == SwitchType::RATGDO_OBSTRUCTION_INVERT) {
+        } else if (this->switch_type_ == SwitchType::RATGDO_INVERT_OBSTRUCTION) {
             this->parent_->set_obstruction_inverted(state);
             // Save to flash
             this->pref_.save(&state);
