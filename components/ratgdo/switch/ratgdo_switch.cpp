@@ -52,7 +52,7 @@ namespace ratgdo {
             bool state = false;
             if (this->pref_.load(&state)) {
                 // Restore saved state
-                this->parent_->set_obstruction_inverted(state);
+                this->parent_->set_invert_obstruction(state);
                 this->publish_state(state);
             } else {
                 // Default to disabled
@@ -91,7 +91,7 @@ namespace ratgdo {
             this->pref_.save(&state);
             this->publish_state(state);
         } else if (this->switch_type_ == SwitchType::RATGDO_INVERT_OBSTRUCTION) {
-            this->parent_->set_obstruction_inverted(state);
+            this->parent_->set_invert_obstruction(state);
             // Save to flash
             this->pref_.save(&state);
             this->publish_state(state);

@@ -459,7 +459,7 @@ namespace ratgdo {
 
                 bool pin_state = this->input_obst_pin_->digital_read();
                 // Apply inversion if enabled
-                if (this->invert_obstructioned_) {
+                if (this->invert_obstruction_) {
                     pin_state = !pin_state;
                 }
 
@@ -878,9 +878,9 @@ namespace ratgdo {
 
     }
 
-    void RATGDOComponent::set_invert_obstructioned(bool inverted)
+    void RATGDOComponent::set_invert_obstruction(bool inverted)
     {
-        this->invert_obstructioned_ = inverted;
+        this->invert_obstruction_ = inverted;
         ESP_LOGI(TAG, "Obstruction signal inversion %s", inverted ? "enabled" : "disabled");
     }
 

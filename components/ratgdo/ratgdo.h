@@ -152,8 +152,8 @@ namespace ratgdo {
         void set_time_to_close(uint16_t seconds);
         void set_close_notification_enabled(bool enabled);
         bool get_close_notification_enabled() const { return this->close_notification_enabled_; }
-        void set_obstruction_inverted(bool enabled);
-        bool get_obstruction_inverted() const { return this->obstruction_inverted_; }
+        void set_invert_obstruction(bool enabled);
+        bool get_invert_obstruction() const { return this->invert_obstruction_; }
         void set_toggle_only_mode(bool enabled);
         bool get_toggle_only_mode() const { return this->toggle_only_mode_; }
 
@@ -213,7 +213,7 @@ namespace ratgdo {
         bool obstruction_sensor_detected_ { false };
         bool presence_detect_window_active_ { false };
         bool close_notification_enabled_ { false };
-        bool obstruction_inverted_ { false };
+        bool invert_obstruction_ { false };
         bool toggle_only_mode_ { false };
         float saved_ttc_value_ { 0 };
 
