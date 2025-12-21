@@ -532,7 +532,11 @@ namespace ratgdo {
             return; // gets ignored by opener
         }
 
-        this->door_action(DoorAction::OPEN);
+        if (this->toggle_only_mode_) {
+            this->door_action(DoorAction::TOGGLE);
+        } else {
+            this->door_action(DoorAction::OPEN);
+        }
 
         if (*this->opening_duration > 0) {
             // query state in case we don't get a status message
@@ -572,7 +576,9 @@ namespace ratgdo {
             return;
         }
 
-        if (this->obstruction_sensor_detected_) {
+        if (this->toggle_only_mode_) {
+            this->door_action(DoorAction::TOGGLE);
+        } else if (this->obstruction_sensor_detected_) {
             this->door_action(DoorAction::CLOSE);
         } else if (*this->door_state == DoorState::OPEN) {
             ESP_LOGD(TAG, "No obstruction sensors detected. Close using TOGGLE.");
@@ -864,6 +870,12 @@ namespace ratgdo {
     {
         this->close_notification_enabled_ = enabled;
         ESP_LOGI(TAG, "Close notification %s", enabled ? "enabled" : "disabled");
+    void RATGDOComponent::set_toggle_only_mode(bool enabled)
+    {
+        this->toggle_only_mode_ = enabled;
+        ESP_LOGI(TAG, "Toggle only mode %s", enabled ? "enabled" : "disabled");
+    }
+
     }
 
     void RATGDOComponent::set_invert_obstructioned(bool inverted)

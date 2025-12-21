@@ -14,8 +14,10 @@ namespace ratgdo {
             ESP_LOGCONFIG(TAG, "  Type: Learn");
         } else if (this->switch_type_ == SwitchType::RATGDO_CLOSE_NOTIFICATION) {
             ESP_LOGCONFIG(TAG, "  Type: Close Notification");
-        } else if (this->switch_type_ == SwitchType::RATGDO_invert_obstruction) {
+        } else if (this->switch_type_ == SwitchType::RATGDO_OBSTRUCTION_INVERT) {
             ESP_LOGCONFIG(TAG, "  Type: Obstruction Invert");
+        } else if (this->switch_type_ == SwitchType::RATGDO_TOGGLE_ONLY) {
+            ESP_LOGCONFIG(TAG, "  Type: Toggle Only Mode");
         }
     }
 
@@ -43,14 +45,27 @@ namespace ratgdo {
                 // Default to disabled
                 this->publish_state(false);
             }
-        } else if (this->switch_type_ == SwitchType::RATGDO_invert_obstruction) {
+        } else if (this->switch_type_ == SwitchType::RATGDO_OBSTRUCTION_INVERT) {
             // Setup persistence
             this->pref_ = global_preferences->make_preference<bool>(this->get_object_id_hash());
 
             bool state = false;
             if (this->pref_.load(&state)) {
                 // Restore saved state
-                this->parent_->set_invert_obstructioned(state);
+                this->parent_->set_obstruction_inverted(state);
+                this->publish_state(state);
+            } else {
+                // Default to disabled
+                this->publish_state(false);
+            }
+        } else if (this->switch_type_ == SwitchType::RATGDO_TOGGLE_ONLY) {
+            // Setup persistence
+            this->pref_ = global_preferences->make_preference<bool>(this->get_object_id_hash());
+
+            bool state = false;
+            if (this->pref_.load(&state)) {
+                // Restore saved state
+                this->parent_->set_toggle_only_mode(state);
                 this->publish_state(state);
             } else {
                 // Default to disabled
@@ -75,8 +90,13 @@ namespace ratgdo {
             // Save to flash
             this->pref_.save(&state);
             this->publish_state(state);
-        } else if (this->switch_type_ == SwitchType::RATGDO_invert_obstruction) {
-            this->parent_->set_invert_obstructioned(state);
+        } else if (this->switch_type_ == SwitchType::RATGDO_OBSTRUCTION_INVERT) {
+            this->parent_->set_obstruction_inverted(state);
+            // Save to flash
+            this->pref_.save(&state);
+            this->publish_state(state);
+        } else if (this->switch_type_ == SwitchType::RATGDO_TOGGLE_ONLY) {
+            this->parent_->set_toggle_only_mode(state);
             // Save to flash
             this->pref_.save(&state);
             this->publish_state(state);

@@ -13,7 +13,8 @@ namespace ratgdo {
         RATGDO_LEARN,
         RATGDO_LED,
         RATGDO_CLOSE_NOTIFICATION,
-        RATGDO_invert_obstruction
+        RATGDO_OBSTRUCTION_INVERT,
+        RATGDO_TOGGLE_ONLY
     };
 
     class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
