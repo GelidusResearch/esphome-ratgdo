@@ -870,12 +870,12 @@ namespace ratgdo {
     {
         this->close_notification_enabled_ = enabled;
         ESP_LOGI(TAG, "Close notification %s", enabled ? "enabled" : "disabled");
+    }
+
     void RATGDOComponent::set_toggle_only_mode(bool enabled)
     {
         this->toggle_only_mode_ = enabled;
         ESP_LOGI(TAG, "Toggle only mode %s", enabled ? "enabled" : "disabled");
-    }
-
     }
 
     void RATGDOComponent::set_invert_obstruction(bool inverted)
