@@ -30,6 +30,77 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 1000;
 
+    // Interval IDs using uint32_t to avoid heap allocations
+    static constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
+
+    // Defer IDs using uint32_t ranges to avoid heap allocations
+    // Bases are auto-generated from counts to prevent ID conflicts
+    // Multi-subscriber ranges (use get_defer_id helper)
+    static constexpr uint32_t DEFER_DOOR_STATE_COUNT = 2;
+    static constexpr uint32_t DEFER_DOOR_STATE_BASE = INTERVAL_POSITION_SYNC + 1;
+
+    static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = 1;
+    static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
+
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+    static constexpr uint32_t DEFER_DISTANCE_COUNT = 1;
+    static constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+    static constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
+#else
+    static constexpr uint32_t DEFER_DISTANCE_END = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+#endif
+
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    static constexpr uint32_t DEFER_VEHICLE_DETECTED_COUNT = 1;
+    static constexpr uint32_t DEFER_VEHICLE_DETECTED_BASE = DEFER_DISTANCE_END;
+
+    static constexpr uint32_t DEFER_VEHICLE_ARRIVING_COUNT = 4;
+    static constexpr uint32_t DEFER_VEHICLE_ARRIVING_BASE = DEFER_VEHICLE_DETECTED_BASE + DEFER_VEHICLE_DETECTED_COUNT;
+
+    static constexpr uint32_t DEFER_VEHICLE_LEAVING_COUNT = 1;
+    static constexpr uint32_t DEFER_VEHICLE_LEAVING_BASE = DEFER_VEHICLE_ARRIVING_BASE + DEFER_VEHICLE_ARRIVING_COUNT;
+
+    static constexpr uint32_t DEFER_VEHICLE_END = DEFER_VEHICLE_LEAVING_BASE + DEFER_VEHICLE_LEAVING_COUNT;
+#else
+    static constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
+#endif
+
+    // Single-subscriber IDs (enum auto-increments after multi-subscriber ranges)
+    enum : uint32_t {
+        DEFER_ROLLING_CODE = DEFER_VEHICLE_END,
+        DEFER_OPENING_DURATION,
+        DEFER_CLOSING_DURATION,
+        DEFER_CLOSING_DELAY,
+        DEFER_OPENINGS,
+        DEFER_PAIRED_TOTAL,
+        DEFER_PAIRED_REMOTES,
+        DEFER_PAIRED_KEYPADS,
+        DEFER_PAIRED_WALL_CONTROLS,
+        DEFER_PAIRED_ACCESSORIES,
+        DEFER_LIGHT_STATE,
+        DEFER_LOCK_STATE,
+        DEFER_OBSTRUCTION_STATE,
+        DEFER_MOTOR_STATE,
+        DEFER_BUTTON_STATE,
+        DEFER_MOTION_STATE,
+        DEFER_LEARN_STATE,
+    };
+
+    static void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
+    {
+        ESP_LOGE(TAG, "Too many subscribers for %s (max %d)", LOG_STR_ARG(observable_name), (int)max);
+    }
+
+    static uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
+    {
+        if (counter >= count) {
+            log_subscriber_overflow(observable_name, count);
+            return base + count - 1;
+        }
+        return base + counter++;
+    }
+
+#ifdef RATGDO_USE_VEHICLE_SENSORS
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
 
@@ -327,10 +398,12 @@ namespace ratgdo {
         if (duration == 0) {
             return;
         }
-        auto count = int(1000 * duration / update_period);
-        set_retry("position_sync_while_moving", update_period, count, [this](uint8_t r) {
+        this->position_sync_remaining_ = std::max(static_cast<uint16_t>(1000 * duration / update_period), static_cast<uint16_t>(1));
+        set_interval(INTERVAL_POSITION_SYNC, static_cast<uint32_t>(update_period), [this]() {
             this->door_position_update();
-            return RetryResult::RETRY;
+            if (--this->position_sync_remaining_ == 0) {
+                cancel_interval(INTERVAL_POSITION_SYNC);
+            }
         });
     }
 
@@ -662,7 +735,7 @@ namespace ratgdo {
         if (this->door_start_moving != 0) {
             ESP_LOGD(TAG, "Cancelling position callbacks");
             cancel_timeout("move_to_position");
-            cancel_retry("position_sync_while_moving");
+            cancel_interval(INTERVAL_POSITION_SYNC);
 
             this->door_start_moving = 0;
             this->door_start_position = DOOR_POSITION_UNKNOWN;
