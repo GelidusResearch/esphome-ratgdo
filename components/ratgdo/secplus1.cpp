@@ -49,6 +49,7 @@ namespace ratgdo {
         {
             this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
             this->wall_panel_emulation_start_ = millis();
+            this->wall_panel_starting_ = false;
             this->door_state = DoorState::UNKNOWN;
             this->light_state = LightState::UNKNOWN;
             this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
@@ -296,10 +297,11 @@ namespace ratgdo {
         void Secplus1::handle_command(const RxCommand& cmd)
         {
             if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE || cmd.resp == 0x31) {
-                ESP_LOGD(TAG, "wall panel is starting");
-                this->wall_panel_starting_ = true;
+                if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
+                    ESP_LOGD(TAG, "wall panel is starting");
+                    this->wall_panel_starting_ = true;
+                }
             } else if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
-
                 DoorState door_state;
                 auto val = cmd.resp & 0x7;
                 // 000 0x0 stopped
