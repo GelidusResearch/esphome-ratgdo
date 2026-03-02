@@ -214,6 +214,12 @@ namespace ratgdo {
         bool obstruction_sensor_detected_ { false };
         bool presence_detect_window_active_ { false };
         bool close_notification_enabled_ { false };
+        uint8_t door_state_sub_num_ { 0 };
+        uint8_t door_action_delayed_sub_num_ { 0 };
+        uint8_t distance_sub_num_ { 0 };
+        uint8_t vehicle_detected_sub_num_ { 0 };
+        uint8_t vehicle_arriving_sub_num_ { 0 };
+        uint8_t vehicle_leaving_sub_num_ { 0 };
         bool invert_obstruction_ { false };
         bool toggle_only_mode_ { false };
         float saved_ttc_value_ { 0 };

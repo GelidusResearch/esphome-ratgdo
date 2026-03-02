@@ -84,6 +84,14 @@ namespace ratgdo {
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
         DEFER_LEARN_STATE,
+        DEFER_TIME_TO_CLOSE,
+        DEFER_DISTANCE_0,          // distance_measurement[0]
+        DEFER_VEHICLE_DETECTED_0,  // vehicle_detected[0]
+        DEFER_VEHICLE_ARRIVING_0,  // vehicle_arriving[0..3]
+        DEFER_VEHICLE_ARRIVING_1_, // (reserved)
+        DEFER_VEHICLE_ARRIVING_2_, // (reserved)
+        DEFER_VEHICLE_ARRIVING_3_, // (reserved)
+        DEFER_VEHICLE_LEAVING_0,   // vehicle_leaving[0]
     };
 
     static void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
@@ -801,80 +809,79 @@ namespace ratgdo {
         // if multiple changes occur during component loop, only the last one is notified
         auto counter = this->protocol_->call(GetRollingCodeCounter {});
         if (counter.tag == Result::Tag::rolling_code_counter) {
-            counter.value.rolling_code_counter.value->subscribe([this, f](uint32_t state) { defer("rolling_code_counter", [this, f, state] { f(state); }); });
+            counter.value.rolling_code_counter.value->subscribe([this, f](uint32_t state) { defer(DEFER_ROLLING_CODE, [this, f, state] { f(state); }); });
         }
     }
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)
     {
-        this->opening_duration.subscribe([this, f](float state) { defer("opening_duration", [this, f, state] { f(state); }); });
+        this->opening_duration.subscribe([this, f](float state) { defer(DEFER_OPENING_DURATION, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_closing_duration(std::function<void(float)>&& f)
     {
-        this->closing_duration.subscribe([this, f](float state) { defer("closing_duration", [this, f, state] { f(state); }); });
+        this->closing_duration.subscribe([this, f](float state) { defer(DEFER_CLOSING_DURATION, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_closing_delay(std::function<void(uint32_t)>&& f)
     {
-        this->closing_delay.subscribe([this, f](uint32_t state) { defer("closing_delay", [this, f, state] { f(state); }); });
+        this->closing_delay.subscribe([this, f](uint32_t state) { defer(DEFER_CLOSING_DELAY, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_openings(std::function<void(uint16_t)>&& f)
     {
-        this->openings.subscribe([this, f](uint16_t state) { defer("openings", [this, f, state] { f(state); }); });
+        this->openings.subscribe([this, f](uint16_t state) { defer(DEFER_OPENINGS, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_paired_devices_total(std::function<void(uint16_t)>&& f)
     {
-        this->paired_total.subscribe([this, f](uint16_t state) { defer("paired_total", [this, f, state] { f(state); }); });
+        this->paired_total.subscribe([this, f](uint16_t state) { defer(DEFER_PAIRED_TOTAL, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_paired_remotes(std::function<void(uint16_t)>&& f)
     {
-        this->paired_remotes.subscribe([this, f](uint16_t state) { defer("paired_remotes", [this, f, state] { f(state); }); });
+        this->paired_remotes.subscribe([this, f](uint16_t state) { defer(DEFER_PAIRED_REMOTES, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_paired_keypads(std::function<void(uint16_t)>&& f)
     {
-        this->paired_keypads.subscribe([this, f](uint16_t state) { defer("paired_keypads", [this, f, state] { f(state); }); });
+        this->paired_keypads.subscribe([this, f](uint16_t state) { defer(DEFER_PAIRED_KEYPADS, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f)
     {
-        this->paired_wall_controls.subscribe([this, f](uint16_t state) { defer("paired_wall_controls", [this, f, state] { f(state); }); });
+        this->paired_wall_controls.subscribe([this, f](uint16_t state) { defer(DEFER_PAIRED_WALL_CONTROLS, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_paired_accessories(std::function<void(uint16_t)>&& f)
     {
-        this->paired_accessories.subscribe([this, f](uint16_t state) { defer("paired_accessories", [this, f, state] { f(state); }); });
+        this->paired_accessories.subscribe([this, f](uint16_t state) { defer(DEFER_PAIRED_ACCESSORIES, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_door_state(std::function<void(DoorState, float)>&& f)
     {
-        static int num = 0;
-        auto name = "door_state" + std::to_string(num++);
+        uint32_t id = get_defer_id(DEFER_DOOR_STATE_BASE, DEFER_DOOR_STATE_COUNT, this->door_state_sub_num_, LOG_STR("door_state"));
 
-        this->door_state.subscribe([this, f, name](DoorState state) {
-            defer(name, [this, f, state] { f(state, *this->door_position); });
+        this->door_state.subscribe([this, f, id](DoorState state) {
+            defer(id, [this, f, state] { f(state, *this->door_position); });
         });
-        this->door_position.subscribe([this, f, name](float position) {
-            defer(name, [this, f, position] { f(*this->door_state, position); });
+        this->door_position.subscribe([this, f, id](float position) {
+            defer(id, [this, f, position] { f(*this->door_state, position); });
         });
     }
     void RATGDOComponent::subscribe_light_state(std::function<void(LightState)>&& f)
     {
-        this->light_state.subscribe([this, f](LightState state) { defer("light_state", [this, f, state] { f(state); }); });
+        this->light_state.subscribe([this, f](LightState state) { defer(DEFER_LIGHT_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_lock_state(std::function<void(LockState)>&& f)
     {
-        this->lock_state.subscribe([this, f](LockState state) { defer("lock_state", [this, f, state] { f(state); }); });
+        this->lock_state.subscribe([this, f](LockState state) { defer(DEFER_LOCK_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_obstruction_state(std::function<void(ObstructionState)>&& f)
     {
-        this->obstruction_state.subscribe([this, f](ObstructionState state) { defer("obstruction_state", [this, f, state] { f(state); }); });
+        this->obstruction_state.subscribe([this, f](ObstructionState state) { defer(DEFER_OBSTRUCTION_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_motor_state(std::function<void(MotorState)>&& f)
     {
-        this->motor_state.subscribe([this, f](MotorState state) { defer("motor_state", [this, f, state] { f(state); }); });
+        this->motor_state.subscribe([this, f](MotorState state) { defer(DEFER_MOTOR_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_button_state(std::function<void(ButtonState)>&& f)
     {
-        this->button_state.subscribe([this, f](ButtonState state) { defer("button_state", [this, f, state] { f(state); }); });
+        this->button_state.subscribe([this, f](ButtonState state) { defer(DEFER_BUTTON_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_motion_state(std::function<void(MotionState)>&& f)
     {
-        this->motion_state.subscribe([this, f](MotionState state) { defer("motion_state", [this, f, state] { f(state); }); });
+        this->motion_state.subscribe([this, f](MotionState state) { defer(DEFER_MOTION_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_sync_failed(std::function<void(bool)>&& f)
     {
@@ -882,38 +889,33 @@ namespace ratgdo {
     }
     void RATGDOComponent::subscribe_learn_state(std::function<void(LearnState)>&& f)
     {
-        this->learn_state.subscribe([this, f](LearnState state) { defer("learn_state", [this, f, state] { f(state); }); });
+        this->learn_state.subscribe([this, f](LearnState state) { defer(DEFER_LEARN_STATE, [this, f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_door_action_delayed(std::function<void(DoorActionDelayed)>&& f)
     {
-        static int num = 0;
-        auto name = "door_action_delayed" + std::to_string(num++);
+        uint32_t id = get_defer_id(DEFER_DOOR_ACTION_DELAYED_BASE, DEFER_DOOR_ACTION_DELAYED_COUNT, this->door_action_delayed_sub_num_, LOG_STR("door_action_delayed"));
 
-        this->door_action_delayed.subscribe([this, f, name](DoorActionDelayed state) { defer(name, [this, f, state] { f(state); }); });
+        this->door_action_delayed.subscribe([this, f = std::move(f), id](DoorActionDelayed state) { defer(id, [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_distance_measurement(std::function<void(int16_t)>&& f)
     {
-        static int num = 0;
-        auto name = "last_distance_measurement" + std::to_string(num++);
-        this->last_distance_measurement.subscribe([this, f, name](int16_t state) { defer(name, [this, f, state] { f(state); }); });
+        uint32_t id = get_defer_id(DEFER_DISTANCE_0, 1, this->distance_sub_num_, LOG_STR("distance_measurement"));
+        this->last_distance_measurement.subscribe([this, f = std::move(f), id](int16_t state) { defer(id, [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f)
     {
-        static int num = 0;
-        auto name = "vehicle_detected_state" + std::to_string(num++);
-        this->vehicle_detected_state.subscribe([this, f, name](VehicleDetectedState state) { defer(name, [this, f, state] { f(state); }); });
+        uint32_t id = get_defer_id(DEFER_VEHICLE_DETECTED_0, 1, this->vehicle_detected_sub_num_, LOG_STR("vehicle_detected"));
+        this->vehicle_detected_state.subscribe([this, f = std::move(f), id](VehicleDetectedState state) { defer(id, [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_vehicle_arriving_state(std::function<void(VehicleArrivingState)>&& f)
     {
-        static int num = 0;
-        auto name = "vehicle_arriving_state" + std::to_string(num++);
-        this->vehicle_arriving_state.subscribe([this, f, name](VehicleArrivingState state) { defer(name, [this, f, state] { f(state); }); });
+        uint32_t id = get_defer_id(DEFER_VEHICLE_ARRIVING_0, 4, this->vehicle_arriving_sub_num_, LOG_STR("vehicle_arriving"));
+        this->vehicle_arriving_state.subscribe([this, f = std::move(f), id](VehicleArrivingState state) { defer(id, [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_vehicle_leaving_state(std::function<void(VehicleLeavingState)>&& f)
     {
-        static int num = 0;
-        auto name = "vehicle_leaving_state" + std::to_string(num++);
-        this->vehicle_leaving_state.subscribe([this, f, name](VehicleLeavingState state) { defer(name, [this, f, state] { f(state); }); });
+        uint32_t id = get_defer_id(DEFER_VEHICLE_LEAVING_0, 1, this->vehicle_leaving_sub_num_, LOG_STR("vehicle_leaving"));
+        this->vehicle_leaving_state.subscribe([this, f = std::move(f), id](VehicleLeavingState state) { defer(id, [f, state] { f(state); }); });
     }
 
     // dry contact methods
@@ -937,7 +939,7 @@ namespace ratgdo {
 
     void RATGDOComponent::subscribe_time_to_close(std::function<void(float)>&& f)
     {
-        this->time_to_close_.subscribe([this, f = std::move(f)](float state) { defer("time_to_close", [f, state] { f(state); }); });
+        this->time_to_close_.subscribe([this, f = std::move(f)](float state) { defer(DEFER_TIME_TO_CLOSE, [f, state] { f(state); }); });
     }
 
     void RATGDOComponent::set_close_notification_enabled(bool enabled)
