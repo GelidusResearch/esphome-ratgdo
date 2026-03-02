@@ -9,6 +9,7 @@ external_components:
 esphome:
   name: gdo1
   friendly_name: GDO1
+  min_version: 2026.2.0
   comment: "ESP32: Garage Door Opener"
 
 esp32:
