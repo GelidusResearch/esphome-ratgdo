@@ -100,7 +100,6 @@ namespace ratgdo {
         return base + counter++;
     }
 
-#ifdef RATGDO_USE_VEHICLE_SENSORS
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
 
