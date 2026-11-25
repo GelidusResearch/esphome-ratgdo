@@ -50,6 +50,7 @@ namespace ratgdo {
         case DoorState::STOPPED:
             this->current_operation = COVER_OPERATION_IDLE;
             this->position = position;
+            break;
         case DoorState::UNKNOWN:
         default:
             this->current_operation = COVER_OPERATION_IDLE;

@@ -12,7 +12,6 @@
 namespace esphome {
 
 class Scheduler;
-class InternalGPIOPin;
 
 namespace ratgdo {
     class RATGDOComponent;
