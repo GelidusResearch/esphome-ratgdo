@@ -224,19 +224,19 @@ namespace ratgdo {
                     this->last_rx_ = millis();
 
                     if (ser_byte < 0x30 || ser_byte > 0x3A) {
-                        ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->sw_serial_.baudRate());
+                        ESP_LOG2(TAG, "[%" PRIu32 "] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->sw_serial_.baudRate());
                         byte_count = 0;
                         continue;
                     }
                     rx_packet[byte_count++] = ser_byte;
-                    ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
+                    ESP_LOG2(TAG, "[%" PRIu32 "] Received byte: [%02X]", millis(), ser_byte);
                     reading_msg = true;
 
                     if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
                         rx_packet[byte_count++] = 0;
                         reading_msg = false;
                         byte_count = 0;
-                        ESP_LOG2(TAG, "[%d] Received command: [%02X]", millis(), rx_packet[0]);
+                        ESP_LOG2(TAG, "[%" PRIu32 "] Received command: [%02X]", millis(), rx_packet[0]);
                         return this->decode_packet(rx_packet);
                     }
 
@@ -248,7 +248,7 @@ namespace ratgdo {
                     uint8_t ser_byte = this->sw_serial_.read();
                     this->last_rx_ = millis();
                     rx_packet[byte_count++] = ser_byte;
-                    ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
+                    ESP_LOG2(TAG, "[%" PRIu32 "] Received byte: [%02X]", millis(), ser_byte);
 
                     if (byte_count == RX_LENGTH) {
                         reading_msg = false;
@@ -262,7 +262,7 @@ namespace ratgdo {
                     // if we have a partial packet and it's been over 100ms since last byte was read,
                     // the rest is not coming (a full packet should be received in ~20ms),
                     // discard it so we can read the following packet correctly
-                    ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%02X ...]", millis(), rx_packet[0]);
+                    ESP_LOGW(TAG, "[%" PRIu32 "] Discard incomplete packet: [%02X ...]", millis(), rx_packet[0]);
                     reading_msg = false;
                     byte_count = 0;
                 }
@@ -273,12 +273,12 @@ namespace ratgdo {
 
         void Secplus1::print_rx_packet(const RxPacket& packet) const
         {
-            ESP_LOG2(TAG, "[%d] Received packet: [%02X %02X]", millis(), packet[0], packet[1]);
+            ESP_LOG2(TAG, "[%" PRIu32 "] Received packet: [%02X %02X]", millis(), packet[0], packet[1]);
         }
 
         void Secplus1::print_tx_packet(const TxPacket& packet) const
         {
-            ESP_LOG2(TAG, "[%d] Sending packet: [%02X %02X]", millis(), packet[0], packet[1]);
+            ESP_LOG2(TAG, "[%" PRIu32 "] Sending packet: [%02X %02X]", millis(), packet[0], packet[1]);
         }
 
         optional<RxCommand> Secplus1::decode_packet(const RxPacket& packet) const
@@ -447,7 +447,7 @@ namespace ratgdo {
             if (!enable_rx) {
                 this->sw_serial_.enableIntTx(true);
             }
-            ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
+            ESP_LOG2(TAG, "[%" PRIu32 "] Sent byte: [%02X]", millis(), value);
         }
 
     } // namespace secplus1
